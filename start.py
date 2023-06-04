@@ -302,7 +302,7 @@ class ServerHandler(StreamRequestHandler):
 serv = ThreadingTCPServer(("", port), ServerHandler)
 
 if __name__ == "__main__":
-	level = World("world", 256, 64, 256)
+	level = World("world", 196, 128, 196)
 	level.load()
 	server.default_level = level
 	print("Server started on port", port)

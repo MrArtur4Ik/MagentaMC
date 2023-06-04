@@ -233,7 +233,7 @@ class UnknownPacketError(Exception):
 
 def read_packet(connection: socket.socket):
 	try:
-		b = connection.recv(1)
+		b = connection.recv(2048)
 	except socket.timeout:
 		raise ConnectionAbortedError()
 	except BlockingIOError:
@@ -241,11 +241,13 @@ def read_packet(connection: socket.socket):
 	except TimeoutError:
 		raise ConnectionAbortedError()
 	if b == b'': raise ConnectionAbortedError()
-	packet_id = int.from_bytes(b, "big")
+	packet_id = b[0]
 	for packet in packets:
 		if packet.direction == PacketDirection.TO_SERVER and packet.packet_id == packet_id:
 			p = packet()
-			p.deserialize(connection.makefile("rb"))
+			stream = io.BytesIO(b[1:])
+			#p.deserialize(connection.makefile("rb"))
+			p.deserialize(stream)
 			return p
 	raise UnknownPacketError("Unknown packet ID: 0x" + int.to_bytes(packet_id, 1, "big").hex() + \
 		" (" + str(packet_id) + ")")

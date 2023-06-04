@@ -23,7 +23,7 @@ class World:
 	def get_default_spawn(self):
 		return Location(self.width//2, self.height, self.depth//2, 0, 0, self)
 	def generate(self, generator: worldgenerator.WorldGenerator):
-		world.level = bytearray(world.width*world.height*world.depth)
+		self.level = bytearray(self.width*self.height*self.depth)
 		generator.generate(self)
 	def get_players(self) -> list:
 		players = []
@@ -34,10 +34,13 @@ class World:
 	def set_block(self, x: int, y: int, z: int, block_type: int, send_packet: bool = True):
 		#self.level[(x + y*self.width) + z*self.width*self.height] = block_type
 		#^ Хз почему но эта формула получения позиции в массиве даёт неверный результат
-		self.level[x+self.depth*(z+self.width*y)] = block_type
+		try:
+			self.level[x+self.depth*(z+self.width*y)] = block_type
+		except:
+			return
 		if send_packet:
-			for p in self.get_players():
-				player.send_packet(packets.SetBlockToClient(p.x, p.y, p.z, block_type))
+			for player in self.get_players():
+				player.send_packet(packets.SetBlockToClient(x, y, z, block_type))
 	def get_block(self, x: int, y: int, z: int):
 		return self.level[x+self.depth*(z+self.width*y)]
 	def serialize(self) -> io.BytesIO:

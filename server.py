@@ -11,7 +11,7 @@ connections = {}
 ops = ["MrArtur4Ik"]
 
 default_level = None
-default_generator = worldgenerator.FlatGenerator()
+default_generator = worldgenerator.ClassicGenerator()
 commands = ["list", "save", "stop", "world", "goto"]
 
 def get_players():
