@@ -265,7 +265,7 @@ class ServerHandler(StreamRequestHandler):
 		try:
 			while True:
 				try:
-					p = packets.read_packet(self.connection)
+					ps = packets.read_packets(self.connection)
 				except ConnectionAbortedError:
 					#Соединение разорвалось
 					break
@@ -277,12 +277,13 @@ class ServerHandler(StreamRequestHandler):
 					#Отправляем пинг игроку каждые 5 секунд
 					self.last_ping = time.time()
 					packets.send_packet(self.connection, packets.Ping())
-				if p == None:
+				if ps == []:
 					#Никакой пакет не пришёл идём дальше
 					time.sleep(1/120)
 					continue
 				#Обработка пакета...
-				threading.Thread(target=packet_handler, name="PacketHandler-" + os.urandom(4).hex(), args=[self.connection, self.client_address, p]).start()
+				for p in ps:
+					threading.Thread(target=packet_handler, name="PacketHandler-" + os.urandom(4).hex(), args=[self.connection, self.client_address, p]).start()
 		except:
 			print(traceback.format_exc())
 		conn = server.connections[self.client_address]

@@ -252,6 +252,36 @@ def read_packet(connection: socket.socket):
 	raise UnknownPacketError("Unknown packet ID: 0x" + int.to_bytes(packet_id, 1, "big").hex() + \
 		" (" + str(packet_id) + ")")
 
+def read_packets(connection: socket.socket):
+	try:
+		b = connection.recv(2048)
+		stream = io.BytesIO(b)
+	except socket.timeout:
+		raise ConnectionAbortedError()
+	except BlockingIOError:
+		return []
+	except TimeoutError:
+		raise ConnectionAbortedError()
+	if b == b'': raise ConnectionAbortedError()
+	packet_id = stream.read(1)
+	ps = []
+	unknown = False
+	while packet_id != b'':
+		packet_id = packet_id[0]
+		unknown = True
+		for packet in packets:
+			if packet.direction == PacketDirection.TO_SERVER and packet.packet_id == packet_id:
+				p = packet()
+				p.deserialize(stream)
+				ps.append(p)
+				unknown = False
+		packet_id = stream.read(1)
+		if unknown:
+			break
+			#raise UnknownPacketError("Unknown packet ID: 0x" + int.to_bytes(packet_id, 1, "big").hex() + \
+				#" (" + str(packet_id) + ")")
+	return ps
+
 def send_packet(connection: socket.socket, packet: PacketSerializer):
 	if packet.direction != PacketDirection.TO_CLIENT: return
 	connection.send(packet.packet_id.to_bytes(1, "big", signed=False) + \
