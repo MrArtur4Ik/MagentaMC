@@ -1,7 +1,3 @@
 __pychache__/*
 *.mw
-__pycache__/packets.cpython-39.pyc
-__pycache__/server.cpython-39.pyc
-__pycache__/servertypes.cpython-39.pyc
-__pycache__/utils.cpython-39.pyc
-__pycache__/worldgenerator.cpython-39.pyc
+*.cpython-39.pyc

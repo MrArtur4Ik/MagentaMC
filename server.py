@@ -1,7 +1,8 @@
 from servertypes import *
-import worldgenerator
+import worldgenerator, logging
 
 debug = False
+logging.basicConfig(format="%(asctime)s [%(levelname)s]: %(message)s", level=logging.DEBUG)
 
 no_permission_message = "&cYou not have permissions!"
 
@@ -9,6 +10,8 @@ entities = []
 worlds = []
 connections = {}
 ops = ["MrArtur4Ik"]
+port = 25565
+config_file = "server.ini"
 
 default_level = None
 default_generator = worldgenerator.ClassicGenerator()

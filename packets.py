@@ -231,6 +231,7 @@ class UnknownPacketError(Exception):
 
 #Utils:
 
+'''Deprecated'''
 def read_packet(connection: socket.socket):
 	try:
 		b = connection.recv(2048)

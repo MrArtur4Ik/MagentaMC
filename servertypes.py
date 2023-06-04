@@ -1,5 +1,4 @@
-import socket, packets, server, worldgenerator
-import io, utils, random, os, server, enum
+import socket, packets, server, worldgenerator, io, utils, random, os, server, logging
 
 class Location:
 	def __init__(self, x: float, y: float, z: float, yaw: float = 0, pitch: float = 0, world = None):
@@ -62,21 +61,21 @@ class World:
 		self.depth = z
 		self.level = bytearray(b)
 	def load(self, generator: worldgenerator.WorldGenerator = ..., output=True):
-		if output: print("Loading level \"" + self.name + "\"...")
+		if output: logging.info("Loading level \"" + self.name + "\"...")
 		if os.path.exists(self.filename) and os.path.isfile(self.filename):
 			with open(self.filename, "rb") as file:
 				self.open(file)
-			if output: print("World loaded from file " + self.filename)
+			if output: logging.info("World loaded from file " + self.filename)
 		else:
-			if output: print(f"Generating...")
+			if output: logging.info(f"Generating...")
 			if generator == ...:
 				server.default_generator.generate(self)
 			else:
 				generator.generate(self)
-			if output: print(f"Level was generated!")
+			if output: logging.info(f"Level was generated!")
 			with open(self.filename, "wb") as file:
 				self.save(file)
-			if output: print("World saved to file " + self.filename)
+			if output: logging.info("World saved to file " + self.filename)
 		server.worlds.append(self)
 		self.spawn = self.get_default_spawn()
 	def unload(self):
