@@ -173,6 +173,12 @@ def shutdown_server():
 	for player in get_players():
 		player.send_packet(packets.Disconnect("Server shutdown!"))
 		player.connection.close()
+	info("Saving worlds...")
+	for world in server.worlds:
+		file = open(world.filename, "wb")
+		world.save(file)
+		file.close()
+	info("Worlds have saved!")
 	serv.shutdown()
 	info("Server was stopped!")
 
