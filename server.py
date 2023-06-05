@@ -28,6 +28,7 @@ def send_heartbeat():
 		"port": port,
 		"max": max_players,
 		"name": config["OnlineMode"]["display-name"],
+		"software": config["OnlineMode"]["software"],
 		"public": True,
 		"version": 7,
 		"salt": salt,
