@@ -17,7 +17,7 @@ heartbeat_url = "http://www.classicube.net/server/heartbeat"
 config = configparser.ConfigParser()
 heartbeat_running = False
 #Нужно для верификации игроков
-salt = [random.choice("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz") for i in range(16)]
+salt = "".join([random.choice("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz") for i in range(16)])
 
 default_level = None
 default_generator = worldgenerator.ClassicGenerator()
