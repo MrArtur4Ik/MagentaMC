@@ -1,5 +1,5 @@
 from socketserver import ThreadingTCPServer, StreamRequestHandler
-import time, traceback, os, logging, packets, utils, server, socket, threading
+import time, traceback, os, logging, packets, utils, server, socket, threading, hashlib
 from servertypes import *
 
 def info(*args):
@@ -170,6 +170,7 @@ def new_entity_id():
 
 def shutdown_server():
 	info("Shutdown server...")
+	server.heartbeat_running = False
 	for player in get_players():
 		player.send_packet(packets.Disconnect("Server shutdown!"))
 		player.connection.close()
@@ -187,20 +188,21 @@ def packet_handler(connection: socket.socket, client_address: tuple, p: packets.
 		info(client_address, "authorized as", p.username)
 		packets.send_packet(connection, packets.ServerIdentification(7, "Hello", "world!", 0x64))
 		new_eid = new_entity_id()
+		if server.config["OnlineMode"]["player-verify"] == "true" and \
+			hashlib.md5((server.salt + p.username).encode()).hexdigest() != p.verify_key:
+			packets.send_packet(connection, packets.Disconnect("Verification failed!"))
+			connection.close()
+			return
 		if new_eid == None:
 			packets.send_packet(connection, packets.Disconnect("Too many entities!"))
 			connection.close()
 			return
-		player_already_play = False
 		for player in get_players():
 			if p.username == player.nickname:
-				player_already_play = True
-				break
-		if player_already_play:
-			packets.send_packet(connection, packets.Disconnect("This player already playing!"))
-			connection.close()
-			return
-		if len(get_players()) >= 10:
+				packets.send_packet(connection, packets.Disconnect("This player already playing!"))
+				connection.close()
+				return
+		if len(get_players()) >= server.max_players:
 			packets.send_packet(connection, packets.Disconnect("Too many players!"))
 			connection.close()
 			return
@@ -316,6 +318,9 @@ def main():
 		serv.serve_forever()
 	except KeyboardInterrupt:
 		shutdown_server()
+	except:
+		traceback.print_exc()
+	server.heartbeat_running = False
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 from servertypes import *
-import worldgenerator, logging
+import worldgenerator, logging, configparser, random, time, requests
 
 debug = False
 logging.basicConfig(format="%(asctime)s [%(levelname)s]: %(message)s", level=logging.DEBUG)
@@ -12,10 +12,35 @@ connections = {}
 ops = ["MrArtur4Ik"]
 port = 25565
 config_file = "server.ini"
+max_players = 10
+heartbeat_url = "http://www.classicube.net/server/heartbeat"
+config = configparser.ConfigParser()
+heartbeat_running = False
+#Нужно для верификации игроков
+salt = [random.choice("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz") for i in range(16)]
 
 default_level = None
 default_generator = worldgenerator.ClassicGenerator()
 commands = ["list", "save", "stop", "world", "goto"]
+
+def send_heartbeat():
+	params = {
+		"port": port,
+		"max": max_players,
+		"name": config["OnlineMode"]["display-name"],
+		"public": True,
+		"version": 7,
+		"salt": salt,
+		"users": len(get_players())
+	}
+	requests.get(heartbeat_url, params)
+
+def heartbeat_thread():
+	last_heartbeat = 0.0
+	while heartbeat_running:
+		if time.time()-last_heartbeat >= 45.0:
+			last_heartbeat = time.time()
+			send_heartbeat()
 
 def get_players():
 	players = []
