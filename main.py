@@ -314,6 +314,7 @@ def main():
 	server.default_level = level
 	info("Server started on port " + str(server.port))
 	serv = ThreadingTCPServer(("", server.port), ServerHandler)
+	if server.heartbeat_running: threading.Thread(target=server.heartbeat_thread).start()
 	try:
 		serv.serve_forever()
 	except KeyboardInterrupt:
