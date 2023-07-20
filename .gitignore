@@ -1,4 +1,4 @@
-__pychache__/*
+__pychache__/*.pyc
 *.mw
 *.cpython-39.pyc
 *.ini

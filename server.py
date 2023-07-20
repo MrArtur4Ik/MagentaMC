@@ -1,5 +1,6 @@
 from servertypes import *
-import worldgenerator, logging, configparser, random, time, requests
+import worldgenerator, logging, configparser, random, time, requests, event, traceback
+from typing import List
 
 debug = False
 logging.basicConfig(format="%(asctime)s [%(levelname)s]: %(message)s", level=logging.DEBUG)
@@ -16,8 +17,10 @@ max_players = 10
 heartbeat_url = "http://www.classicube.net/server/heartbeat"
 config = configparser.ConfigParser()
 heartbeat_running = False
+events = []
 #Нужно для верификации игроков
 salt = "".join([random.choice("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz") for i in range(16)])
+available_nickname_chars = "_0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 default_level = None
 default_generator = worldgenerator.ClassicGenerator()
@@ -66,3 +69,17 @@ def send_world(world: World, player: Player):
 			l = p.location
 			#Новому игроку отправляем спавн каждого игрока
 			player.send_packet(packets.SpawnPlayer(p.entity_id, p.nickname, l.x, l.y, l.z, l.yaw, l.pitch))
+
+def handle_event(type: event.Event = None, types: List[event.Event] = [], filter = lambda event: True):
+	def wrapper(func):
+		events.append(event.EventHandler(func, types if not type else [type], filter))
+		return func
+	return wrapper
+
+def call_event(event: event.Event):
+	for handler in events:
+		try:
+			if any([isinstance(event, e) for e in handler.events]) and handler.filter(event):
+				handler.func(event)
+		except:
+			traceback.print_exc()

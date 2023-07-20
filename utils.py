@@ -45,3 +45,6 @@ def decompress(data):
         data = f.read()
 
     return data
+
+def ip_format(address: tuple) -> str:
+	return "{}:{}".format(*address)

@@ -1,6 +1,8 @@
-import main, server, os, configparser
+import main, server, os, configparser, logging
 
 if __name__ == "__main__":
+    logging.getLogger("requests").setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
     parser = configparser.ConfigParser()
     server.config = parser
     if os.path.exists(server.config_file):
@@ -11,7 +13,7 @@ if __name__ == "__main__":
         parser["Server"]["max-players"] = "10"
         parser.add_section("OnlineMode")
         parser["OnlineMode"]["public"] = "false"
-        parser["OnlineMode"]["player-verify"] = "false"
+        parser["OnlineMode"]["player-verify"] = "true"
         parser["OnlineMode"]["display-name"] = "A Minecraft server."
         parser["OnlineMode"]["software"] = "MagentaMC"
         with open(server.config_file, "w") as file:

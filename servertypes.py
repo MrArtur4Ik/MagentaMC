@@ -119,3 +119,6 @@ class Player(Entity, CommandSender):
 			for p in location.world.get_players():
 				if p != self:
 					p.send_packet(packets.PositionAndOrientationToClient(self.entity_id, location.x, location.y, location.z, location.yaw, location.pitch))
+	def kick(self, reason: str):
+		self.send_packet(packets.Disconnect(reason))
+		self.connection.close()

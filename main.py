@@ -1,5 +1,5 @@
 from socketserver import ThreadingTCPServer, StreamRequestHandler
-import time, traceback, os, logging, packets, utils, server, socket, threading, hashlib
+import time, traceback, os, logging, packets, utils, server, socket, threading, hashlib, event
 from servertypes import *
 
 def info(*args):
@@ -183,31 +183,41 @@ def shutdown_server():
 	serv.shutdown()
 	info("Server was stopped!")
 
+@server.handle_event(event.PreLoginEvent)
+def login(e: event.PreLoginEvent):
+	new_eid = new_entity_id()
+	if server.config["OnlineMode"]["player-verify"] == "true" and \
+		hashlib.md5((server.salt + e.identify_packet.username).encode()).hexdigest() != e.identify_packet.verify_key:
+		e.disallow("Verification failed!")
+		return
+	if new_eid == None:
+		e.disallow("Too many entities!")
+		return
+	for player in get_players():
+		if e.identify_packet.username == player.nickname:
+			e.disallow("This player already playing!")
+			return
+	if len(get_players()) >= server.max_players:
+		e.disallow("Too many players!")
+		return
+
 def packet_handler(connection: socket.socket, client_address: tuple, p: packets.PacketSerializer):
 	if isinstance(p, packets.PlayerIdentification):
-		info(client_address, "authorized as", p.username)
 		packets.send_packet(connection, packets.ServerIdentification(7, "Hello", "world!", 0x64))
+		
+		logging.info(p.username + "[" + utils.ip_format(client_address) + "] is connecting...")
+		e = event.PreLoginEvent(connection, client_address, p)
+		server.call_event(e)
+		if not e.is_allowed():
+			packets.send_packet(connection, packets.Disconnect(e.get_reason()))
+			connection.close()
+			logging.info(p.username + " isn't allowed to join: " + e.get_reason())
+			return
+		
 		new_eid = new_entity_id()
-		if server.config["OnlineMode"]["player-verify"] == "true" and \
-			hashlib.md5((server.salt + p.username).encode()).hexdigest() != p.verify_key:
-			packets.send_packet(connection, packets.Disconnect("Verification failed!"))
-			connection.close()
-			return
-		if new_eid == None:
-			packets.send_packet(connection, packets.Disconnect("Too many entities!"))
-			connection.close()
-			return
-		for player in get_players():
-			if p.username == player.nickname:
-				packets.send_packet(connection, packets.Disconnect("This player already playing!"))
-				connection.close()
-				return
-		if len(get_players()) >= server.max_players:
-			packets.send_packet(connection, packets.Disconnect("Too many players!"))
-			connection.close()
-			return
 		new_location = server.default_level.spawn
 		new_player = Player(p.username, new_location, new_eid, connection, client_address)
+		logging.info(utils.ip_format(client_address) + " authorized as " + p.username)
 		if p.username in server.ops:
 			new_player.is_op = True
 		server.connections[client_address]["authorized"] = True
@@ -268,7 +278,7 @@ class ServerHandler(StreamRequestHandler):
 		self.connection.settimeout(10)
 		self.last_ping = time.time()
 		server.connections[self.client_address] = {"connection": self.connection, "authorized": False}
-		info(self.client_address, "connected. Auth...")
+		logging.info("[" + utils.ip_format(self.client_address) + "] connected. Auth...")
 		try:
 			while True:
 				try:
@@ -304,7 +314,7 @@ class ServerHandler(StreamRequestHandler):
 				broadcast(player.nickname + " left the game.")
 			except:
 				info(traceback.format_exc())
-		info(self.client_address,"disconnected.")
+		info("[" + utils.ip_format(self.client_address) + "] disconnected.")
 		del server.connections[self.client_address]
 
 def main():
@@ -322,7 +332,3 @@ def main():
 	except:
 		traceback.print_exc()
 	server.heartbeat_running = False
-
-
-if __name__ == "__main__":
-	main()
