@@ -5,19 +5,31 @@ class WorldGenerator:
 
 class ClassicGenerator(WorldGenerator):
 	def generate(self, world):
-		noise = perlin_noise.PerlinNoise(20, world.seed) #Для получения океанов
+		
+		noise = perlin_noise.PerlinNoise(20, world.seed) #Основной шум для получения океанов
 		noise1 = perlin_noise.PerlinNoise(60, world.seed) #Для ландшафта на суше
 		noise2 = perlin_noise.PerlinNoise(70, world.seed+1) #Для эрозии
-		devide = 2400
+
+		noise_scale = (2400, 2400)
+		noise1_scale = (900, 1100)
+		noise2_scale = (300, 300)
+
 		water_level = max(world.height//2-1, 0)
 		for i in range(world.width):
 			for j in range(world.depth):
-				height = (noise([i/devide, j/devide])/2+0.5)**2
-				if height > 0.2: #Для создания холмистой местности над уровнем моря
-					h = (noise1([i/900, j/1100])/2+0.5)**6 + (noise2([i/300, j/300])/2+0.5)**1.5 * 0.05
-					#height = (height+h)/2
-					height *= h+1
-					height = height%1
+				#Создаём основную карту высот из первостепенного шума
+				height = (noise([i/noise_scale[0], j/noise_scale[1]])/2+0.5)**2
+
+				#Создаём эрозию
+				#if height > 0.2:
+				h = (noise1([i/noise1_scale[0], j/noise1_scale[1]])/2+0.5)**6 + \
+					(noise2([i/noise2_scale[0], j/noise2_scale[1]])/2+0.5)**1.5 * 0.05
+				#height = (height+h)/2
+				height *= h+1
+				height = height%1
+
+
+				#Получаем высоту в блоках
 				height = int(height*80+water_level-15)
 				#Dirt
 				for h in range(height):

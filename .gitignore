@@ -1,4 +1,7 @@
-__pychache__/*.pyc
+__pycache__/*.pyc
 *.mw
 *.cpython-39.pyc
 *.ini
+.venv/*
+.idea/*
+ops.txt
