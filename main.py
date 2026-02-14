@@ -207,11 +207,6 @@ def login(e: event.PreLoginEvent):
 		e.disallow("Too many players!")
 		return
 
-@server.register_event(event.BlockChangeEvent)
-def block_change(e: event.BlockChangeEvent):
-	#e.player.send_message(f"{e.packet.mode} {e.packet.block_type}")
-	if e.packet.mode != 0 and e.packet.block_type in range(8, 12): e.set_cancelled(True)
-
 def main():
 	global serv
 	level = World("world", 256, 128, 256) #196, 128, 196
