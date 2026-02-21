@@ -1,6 +1,9 @@
 from typing import List, Optional, Callable
 from servertypes import CommandSender
 
+class CommandExecutor:
+    def run(self, sender: CommandSender, command: str, args: List[str]): pass
+
 class Command:
     name: str
     aliases: List[str]
@@ -16,11 +19,8 @@ class Command:
     def has_permission(self, sender: CommandSender) -> bool:
         return sender.has_permission(self.permission) if self.permission else True
 
-class CommandExecutor:
-    def run(self, sender: CommandSender, command: str, args: List[str]): pass
-
 class LambdaCommandExecutor(CommandExecutor):
-    def __init__(self, func: Callable[[CommandSender, str, List[str]]]) -> None:
+    def __init__(self, func: Callable[[CommandSender, str, List[str]], None]) -> None:
         self.func = func
     
     def run(self, sender: CommandSender, command: str, args: List[str]):

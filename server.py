@@ -120,7 +120,7 @@ def broadcast_command(sender: CommandSender, command: str, args: List[str]):
 '''
 
 def register_command(name: str, aliases: List[str] = [], permission: str = None):
-	def wrapper(func: Callable[[CommandSender, str, List[str]]]):
+	def wrapper(func: Callable[[CommandSender, str, List[str]], None]):
 		registered_commands.append(
 			command.Command(name, command.LambdaCommandExecutor(func), aliases, permission))
 		return func
